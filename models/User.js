@@ -1,34 +1,55 @@
 const mongoose = require('mongoose');
-const User = require('./path/to/userModel');
 
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost/your_database', { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+// Define the Thought schema (assuming you have a Thought model)
+const thoughtSchema = new mongoose.Schema({
+  // Your Thought schema fields here
+});
 
-// Create a new user
-const createUser = async () => {
-  try {
-    const newUser = new User({
-      username: 'johndoe',
-      email: 'john@example.com',
-    });
+// Define the Thought model
+const Thought = mongoose.model('Thought', thoughtSchema);
 
-    const savedUser = await newUser.save();
-    console.log('User created:', savedUser);
-  } catch (err) {
-    console.error(err);
-  }
-};
+// Define the User schema
+const userSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
+  },
+  thoughts: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Thought'
+    }
+  ],
+  friends: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }
+  ]
+});
 
-// Retrieve a user and include the friendCount virtual
-const getUserWithFriendCount = async (userId) => {
-  try {
-    const user = await User.findById(userId);
-    console.log('User with friend count:', user.toJSON());
-  } catch (err) {
-    console.error(err);
-  }
-};
+// Create a virtual called `friendCount` that retrieves the length of the user's `friends` array field on query
+userSchema.virtual('friendCount').get(function () {
+  return this.friends.length;
+});
 
-createUser();
+// Ensure virtual fields are serialised
+userSchema.set('toJSON', {
+  virtuals: true
+});
+userSchema.set('toObject', {
+  virtuals: true
+});
+
+// Create the User model
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;
