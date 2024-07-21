@@ -1,6 +1,6 @@
 const connection = require('../config/connection');
 const { Thought, User } = require('../models');
-const { getRandomThought, getRandomUser } = require('./data');
+const { getRandomThoughts, getRandomName } = require('./data');
 
 connection.on('error', (err) => err);
 
@@ -24,7 +24,7 @@ connection.once('open', async () => {
 
   // Loop to create user data
   for (let i = 0; i < 20; i++) {
-    const userData = getRandomUser();
+    const userData = getRandomName();
     users.push(userData);
   }
 
@@ -33,10 +33,10 @@ connection.once('open', async () => {
 
   // Loop to create thought data, assigning thoughts to users
   for (let i = 0; i < 20; i++) {
-    const thoughtData = getRandomThought();
+    const thoughtData = getRandomThoughts(1);
     thoughts.push({
-      ...thoughtData,
-      username: userData[Math.floor(Math.random() * userData.length)].username, // Assign a random user to the thought
+      ...thoughtData[0],
+      username: users[Math.floor(Math.random() * users.length)].username, // Assign a random user to the thought
     });
   }
 
